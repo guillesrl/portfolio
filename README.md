@@ -5,12 +5,13 @@ A minimalist, responsive portfolio website that automatically displays all publi
 ## Features
 
 - **Automatic Updates**: Fetches repository data directly from GitHub API
-- **Preview Images**: Attempts to extract screenshots from README files, falls back to styled placeholders
+- **Preview Images**: Attempts to extract screenshots from README files and repository contents, falls back to styled placeholders with project initials
 - **Tech Stack Display**: Shows programming language and repository topics
 - **Filter & Sort**: Search projects by name, description, language, or topics. Sort by recent, stars, or name.
 - **Responsive Design**: Mobile-first layout that adapts to all screen sizes
 - **Dark Mode**: Automatically adapts to system color scheme preference
 - **No Build Tools**: Plain HTML, CSS, and JavaScript - works in any browser
+- **Comprehensive Image Scanning**: Scans all repositories for images (not limited to recent ones)
 
 ## Setup
 
@@ -123,11 +124,11 @@ portfolio/
 
 1. On page load, `script.js` reads configuration from `config.js` (fallback to defaults)
 2. Fetches public repositories from GitHub API: `GET /users/{username}/repos`
-3. For the first 20 repositories, fetches README content to extract preview images
+3. For **all repositories**, fetches README content and scans root directory to extract preview images
 4. Processes and sorts repositories based on user selection
 5. Renders responsive project cards with:
    - Project name and description
-   - Preview image (from README or placeholder with initials)
+   - Preview image (from README, repository files, or placeholder with initials)
    - Tech stack tags (language + topics)
    - Stats: stars and last updated date
    - Links: "View Code" (GitHub) and "Live Demo" (if homepage URL exists)
@@ -167,9 +168,10 @@ Modify `createProjectCard()` function in `script.js` to show/hide:
 
 The app makes:
 - 1 request to fetch repositories list (all repos in one call with `per_page=100`)
-- Up to 20 additional requests to fetch READMEs for image extraction
+- 2 additional requests per repository (README + contents check) for image extraction
 
-Total: ~21 requests on first load. Subsequent navigation/search uses cached data.
+Total: 1 + (2 × number_of_repos) requests on first load. With 10 repositories: ~21 requests.
+Subsequent navigation/search uses cached data.
 
 ### Rate Limit Tips
 
