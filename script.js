@@ -187,11 +187,9 @@ function processRepo(repo, readme, imageUrl = null) {
 }
 
 async function fetchAllReposWithReadme(repos) {
-    // Only search for images in the most recent repo (top 1)
-    // This dramatically reduces API calls and 404 errors
-    const topRepos = repos.slice(0, 1);
-
-    const repoDataPromises = topRepos.map(async (repo) => {
+    // Fetch readmes and images for ALL repositories
+    // Note: This makes more API calls but ensures all repos get images
+    const repoDataPromises = repos.map(async (repo) => {
         const readme = await fetchReadme(repo.owner.login, repo.name);
         const imageUrl = await extractImageForRepo(repo, readme);
         return { repo, readme, imageUrl };
@@ -199,12 +197,7 @@ async function fetchAllReposWithReadme(repos) {
 
     const results = await Promise.all(repoDataPromises);
 
-    const processedRepos = results.map(({ repo, readme, imageUrl }) => processRepo(repo, readme, imageUrl));
-
-    // For all other repos, process without additional API calls
-    const remainingRepos = repos.slice(1).map(repo => processRepo(repo, null, null));
-
-    return [...processedRepos, ...remainingRepos];
+    return results.map(({ repo, readme, imageUrl }) => processRepo(repo, readme, imageUrl));
 }
 
 function sortRepos(repos, sortBy) {
