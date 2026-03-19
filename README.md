@@ -13,6 +13,7 @@ A minimalist, responsive portfolio website that automatically displays all publi
 - **No Build Tools**: Plain HTML, CSS, and JavaScript - works in any browser
 - **Comprehensive Image Scanning**: Scans all repositories for images (not limited to recent ones)
 - **Complete Documentation**: All portfolio repositories include proper README files with project descriptions and setup instructions
+- **Ready for GitHub Pages**: All projects documented and can be deployed effortlessly
 
 ## Setup
 
