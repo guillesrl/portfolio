@@ -25,7 +25,7 @@ const PER_PAGE = 100;
 
 // ===== State =====
 let allRepos = [];
-let sortBy = 'updated';
+let sortBy = 'created';
 
 // ===== DOM Elements =====
 const loadingEl = document.getElementById('loading');
@@ -180,6 +180,7 @@ function processRepo(repo, readme, imageUrl = null) {
         language: repo.language,
         topics: repo.topics || [],
         stars: repo.stargazers_count,
+        createdAt: repo.created_at,
         updatedAt: repo.updated_at,
         imageUrl: imageUrl,
         hasReadme: !!readme
@@ -210,9 +211,9 @@ function sortRepos(repos, sortBy) {
         case 'name':
             sorted.sort((a, b) => a.name.localeCompare(b.name));
             break;
-        case 'updated':
+        case 'created':
         default:
-            sorted.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             break;
     }
 
