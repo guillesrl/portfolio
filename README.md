@@ -12,6 +12,7 @@ A minimalist, responsive portfolio website that automatically displays all publi
 - **Dark Mode**: Automatically adapts to system color scheme preference
 - **No Build Tools**: Plain HTML, CSS, and JavaScript - works in any browser
 - **Comprehensive Image Scanning**: Scans all repositories for images (not limited to recent ones)
+- **Complete Documentation**: All portfolio repositories include proper README files with project descriptions and setup instructions
 
 ## Setup
 
