@@ -233,15 +233,8 @@ function filterRepos(repos, searchTerm) {
 
 // ===== Rendering =====
 function generatePlaceholderImage(projectName) {
-    // Get first letter or first two letters
-    const initials = projectName.substring(0, 2).toUpperCase();
-    const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-
-    return `
-        <div class="project-card__image-placeholder" style="background: ${gradient};">
-            ${initials}
-        </div>
-    `;
+    // Return empty string - no placeholder image section
+    return '';
 }
 
 function createProjectCard(project) {
