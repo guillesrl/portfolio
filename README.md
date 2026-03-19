@@ -5,7 +5,7 @@ A minimalist, responsive portfolio website that automatically displays all publi
 ## Features
 
 - **Automatic Updates**: Fetches repository data directly from GitHub API
-- **Preview Images**: Attempts to extract screenshots from README files and repository contents, falls back to styled placeholders with project initials
+- **Preview Images**: Attempts to extract screenshots from README files and repository contents. Projects without images display clean card layout (no placeholder).
 - **Tech Stack Display**: Shows programming language and repository topics
 - **Filter & Sort**: Search projects by name, description, language, or topics. Sort by recent, stars, or name.
 - **Responsive Design**: Mobile-first layout that adapts to all screen sizes
