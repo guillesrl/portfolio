@@ -22,10 +22,12 @@ const CONFIG = (() => {
 
 const API_BASE = 'https://api.github.com';
 const PER_PAGE = 100;
+const CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutos
 
 // ===== State =====
 let allRepos = [];
 let sortBy = 'created';
+let lastFetchTime = null;
 
 // ===== DOM Elements =====
 const loadingEl = document.getElementById('loading');
@@ -34,6 +36,7 @@ const errorMessageEl = document.getElementById('errorMessage');
 const projectsGridEl = document.getElementById('projectsGrid');
 const searchInputEl = document.getElementById('searchInput');
 const sortSelectEl = document.getElementById('sortSelect');
+const lastUpdatedEl = document.getElementById('lastUpdated');
 
 // ===== Event Listeners =====
 searchInputEl.addEventListener('input', filterAndRenderProjects);
@@ -41,6 +44,60 @@ sortSelectEl.addEventListener('change', (e) => {
     sortBy = e.target.value;
     filterAndRenderProjects();
 });
+
+// ===== Cache Functions =====
+function getCachedRepos() {
+    try {
+        const cached = localStorage.getItem('portfolio_repos');
+        const timestamp = localStorage.getItem('portfolio_timestamp');
+
+        if (cached && timestamp) {
+            const cacheAge = Date.now() - parseInt(timestamp);
+            if (cacheAge < CACHE_DURATION_MS) {
+                return JSON.parse(cached);
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to read from cache:', e);
+    }
+    return null;
+}
+
+function setCachedRepos(repos) {
+    try {
+        localStorage.setItem('portfolio_repos', JSON.stringify(repos));
+        localStorage.setItem('portfolio_timestamp', Date.now().toString());
+    } catch (e) {
+        console.warn('Failed to write to cache:', e);
+    }
+}
+
+function updateLastUpdatedDisplay() {
+    if (!lastUpdatedEl) return;
+
+    const timestamp = localStorage.getItem('portfolio_timestamp');
+    if (timestamp) {
+        const date = new Date(parseInt(timestamp));
+        const now = Date.now();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        let text;
+        if (diffMins < 1) {
+            text = 'Updated just now';
+        } else if (diffMins < 60) {
+            text = `Updated ${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+        } else if (diffMins < 1440) { // menos de 24 horas
+            const hours = Math.floor(diffMins / 60);
+            text = `Updated ${hours} hour${hours !== 1 ? 's' : ''} ago`;
+        } else {
+            text = `Updated ${date.toLocaleDateString()}`;
+        }
+
+        lastUpdatedEl.textContent = text;
+        lastUpdatedEl.title = `Last updated: ${date.toLocaleString()}`;
+    }
+}
 
 // ===== API Functions =====
 async function fetchWithAuth(url) {
@@ -345,6 +402,26 @@ async function init() {
         errorEl.style.display = 'none';
         projectsGridEl.innerHTML = '';
 
+        // Try to load from cache first
+        const cachedRepos = getCachedRepos();
+
+        if (cachedRepos && cachedRepos.length > 0) {
+            console.log('Loading from cache');
+            allRepos = cachedRepos;
+            filterAndRenderProjects();
+            updateLastUpdatedDisplay();
+            loadingEl.style.display = 'none';
+
+            // Try to refresh in background if cache is getting old
+            const timestamp = localStorage.getItem('portfolio_timestamp');
+            const cacheAge = Date.now() - parseInt(timestamp || '0');
+            if (cacheAge > CACHE_DURATION_MS * 0.7) { // Refresh if older than 70% of TTL
+                refreshDataInBackground();
+            }
+            return;
+        }
+
+        // No valid cache, fetch from API
         const repos = await fetchRepos();
 
         if (repos.length === 0) {
@@ -354,14 +431,49 @@ async function init() {
         // Fetch readmes for preview images
         allRepos = await fetchAllReposWithReadme(repos);
 
+        // Cache the results
+        setCachedRepos(allRepos);
+
         filterAndRenderProjects();
+        updateLastUpdatedDisplay();
     } catch (error) {
         console.error('Failed to load repositories:', error);
-        errorMessageEl.textContent = `Failed to load repositories: ${error.message}`;
-        errorEl.style.display = 'block';
-        loadingEl.style.display = 'none';
+
+        // Try to use stale cache as fallback
+        const cachedRepos = getCachedRepos();
+        if (cachedRepos && cachedRepos.length > 0) {
+            console.warn('Using stale cache due to API error');
+            allRepos = cachedRepos;
+            filterAndRenderProjects();
+            updateLastUpdatedDisplay();
+            if (lastUpdatedEl) {
+                lastUpdatedEl.textContent += ' (stale)';
+            }
+        } else {
+            errorMessageEl.textContent = `Failed to load repositories: ${error.message}`;
+            errorEl.style.display = 'block';
+        }
     } finally {
         loadingEl.style.display = 'none';
+    }
+}
+
+// Refresh data in background without blocking UI
+async function refreshDataInBackground() {
+    try {
+        console.log('Refreshing data in background...');
+        const repos = await fetchRepos();
+        if (repos.length > 0) {
+            const freshRepos = await fetchAllReposWithReadme(repos);
+            allRepos = freshRepos;
+            setCachedRepos(allRepos);
+            filterAndRenderProjects();
+            updateLastUpdatedDisplay();
+            console.log('Background refresh complete');
+        }
+    } catch (error) {
+        console.warn('Background refresh failed:', error.message);
+        // Don't show error to user, keep showing cached data
     }
 }
 
