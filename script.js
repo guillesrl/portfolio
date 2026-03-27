@@ -428,8 +428,16 @@ async function init() {
             throw new Error('No repositories found for this user.');
         }
 
+        // Filter out excluded repositories (e.g., the portfolio itself)
+        const filteredRepos = repos.filter(repo => repo.name !== 'portfolio');
+        console.log(`Filtered out ${repos.length - filteredRepos.length} repository(ies)`);
+
+        if (filteredRepos.length === 0) {
+            throw new Error('No repositories to display after filtering.');
+        }
+
         // Fetch readmes for preview images
-        allRepos = await fetchAllReposWithReadme(repos);
+        allRepos = await fetchAllReposWithReadme(filteredRepos);
 
         // Cache the results
         setCachedRepos(allRepos);
@@ -464,12 +472,16 @@ async function refreshDataInBackground() {
         console.log('Refreshing data in background...');
         const repos = await fetchRepos();
         if (repos.length > 0) {
-            const freshRepos = await fetchAllReposWithReadme(repos);
-            allRepos = freshRepos;
-            setCachedRepos(allRepos);
-            filterAndRenderProjects();
-            updateLastUpdatedDisplay();
-            console.log('Background refresh complete');
+            // Filter out excluded repositories (e.g., the portfolio itself)
+            const filteredRepos = repos.filter(repo => repo.name !== 'portfolio');
+            if (filteredRepos.length > 0) {
+                const freshRepos = await fetchAllReposWithReadme(filteredRepos);
+                allRepos = freshRepos;
+                setCachedRepos(allRepos);
+                filterAndRenderProjects();
+                updateLastUpdatedDisplay();
+                console.log('Background refresh complete');
+            }
         }
     } catch (error) {
         console.warn('Background refresh failed:', error.message);

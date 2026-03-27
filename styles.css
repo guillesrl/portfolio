@@ -207,8 +207,22 @@ body {
 /* ===== Projects Grid ===== */
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: 1fr; /* Always single column by default */
     gap: var(--spacing-lg);
+}
+
+/* Two columns on larger screens */
+@media (min-width: 1025px) {
+    .projects-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+}
+
+/* Three columns on very large screens */
+@media (min-width: 1440px) {
+    .projects-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 /* ===== Project Card ===== */
@@ -372,7 +386,9 @@ body {
 }
 
 /* ===== Responsive Design ===== */
-@media (max-width: 600px) {
+/* Mobile: default single column already set above */
+
+@media (max-width: 768px) {
     .header__title {
         font-size: 1.5rem;
     }
@@ -390,18 +406,8 @@ body {
         width: 100%;
     }
 
-    .projects-grid {
-        grid-template-columns: 1fr;
-    }
-
     .project-card__actions {
         flex-direction: column;
-    }
-}
-
-@media (max-width: 1024px) {
-    .projects-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 }
 
